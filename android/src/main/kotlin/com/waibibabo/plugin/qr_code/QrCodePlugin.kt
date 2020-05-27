@@ -6,7 +6,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.PluginRegistry.Registrar
 
 /** QrCodePlugin */
-public class QrCodePlugin : FlutterPlugin {
+class QrCodePlugin : FlutterPlugin {
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         val channel = MethodChannel(flutterPluginBinding.binaryMessenger, "plugin.waibibabo.com/qr_code")
         channel.setMethodCallHandler(QrCodeMethodHandler());

@@ -9,6 +9,6 @@ import io.flutter.plugin.platform.PlatformViewFactory
 class QrScanViewFactory(private val messenger: BinaryMessenger) : PlatformViewFactory(StandardMessageCodec.INSTANCE) {
     override fun create(context: Context?, viewId: Int, args: Any?): PlatformView {
         val params = args?.let { args as Map<String, Any> }
-        return QrScanView(context!!, messenger, viewId, params);
+        return QrScanView(context!!, messenger, viewId, params)
     }
 }
