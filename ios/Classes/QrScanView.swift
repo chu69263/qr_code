@@ -43,6 +43,12 @@ class QrScanView: NSObject, FlutterPlatformView,FlutterStreamHandler,AVCaptureMe
         eventChannel.setStreamHandler(self)
     }
     
+    deinit {
+        mView.stopCamera()
+        eventChannel.setStreamHandler(nil)
+        methodChannel.setMethodCallHandler(nil)
+    }
+    
     private var eventSink:FlutterEventSink?
     
     func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
@@ -178,7 +184,6 @@ class ScanInnerView: UIView {
         }
         
         previewLayer = AVCaptureVideoPreviewLayer(session: session)
-        previewLayer.frame = CGRect(origin: CGPoint(x:0,y:0), size: CGSize(width: 100, height: 100))
         previewLayer.videoGravity = .resizeAspectFill
         layer.insertSublayer(previewLayer, at: 0)
         self.session.startRunning()
