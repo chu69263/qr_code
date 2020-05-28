@@ -7,50 +7,8 @@
 
 import AVFoundation
 
-
-class QrScanView: NSObject, FlutterPlatformView,FlutterStreamHandler,AVCaptureMetadataOutputObjectsDelegate{
-    
-    var mView : ScanInnerView!
-    var eventChannel:FlutterEventChannel!
-    var methodChannel:FlutterMethodChannel!
-    
-    
-    init(binaryMessenger:FlutterBinaryMessenger,frame:CGRect, viewId:Int64, args: Any?) {
-        super.init()
-        mView = ScanInnerView(frame:frame,outputDelegate: self)
-        methodChannel = FlutterMethodChannel(name:"plugin.waibibabo.com/qr_scan_view_\(viewId)",binaryMessenger: binaryMessenger)
-        eventChannel = FlutterEventChannel(name:"plugin.waibibabo.com/qr_scan_view_\(viewId)/event",binaryMessenger: binaryMessenger)
-        methodChannel.setMethodCallHandler({ call, result in
-            switch call.method {
-            case "startCamera":
-                self.mView.startCamera()
-                result(nil)
-            case "stopCamera":
-                self.mView.stopCamera()
-                result(nil)
-            case "setFlash":
-                self.mView.setFlash(flash: call.arguments as! Bool)
-                result(nil)
-            case "getFlash":
-                result(self.mView.getFlash())
-            case "toggleFlash":
-                self.mView.toggleFlash()
-                result(nil)
-            default:
-                result(nil)
-            }
-        })
-        eventChannel.setStreamHandler(self)
-    }
-    
-    deinit {
-        mView.stopCamera()
-        eventChannel.setStreamHandler(nil)
-        methodChannel.setMethodCallHandler(nil)
-    }
-    
-    private var eventSink:FlutterEventSink?
-    
+class ScanStreamHandler: NSObject,FlutterStreamHandler {
+    var eventSink:FlutterEventSink?
     func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
         self.eventSink = events
         return nil
@@ -61,6 +19,51 @@ class QrScanView: NSObject, FlutterPlatformView,FlutterStreamHandler,AVCaptureMe
         return nil
     }
     
+}
+class QrScanView: NSObject, FlutterPlatformView,AVCaptureMetadataOutputObjectsDelegate{
+    
+    var mView : ScanInnerView!
+    var eventChannel:FlutterEventChannel!
+    var methodChannel:FlutterMethodChannel!
+    var scanStreamHandler:ScanStreamHandler!
+    
+    
+    init(binaryMessenger:FlutterBinaryMessenger,frame:CGRect, viewId:Int64, args: Any?) {
+        super.init()
+        mView = ScanInnerView(frame:frame,outputDelegate: self)
+        methodChannel = FlutterMethodChannel(name:"plugin.waibibabo.com/qr_scan_view_\(viewId)",binaryMessenger: binaryMessenger)
+        eventChannel = FlutterEventChannel(name:"plugin.waibibabo.com/qr_scan_view_\(viewId)/event",binaryMessenger: binaryMessenger)
+        methodChannel.setMethodCallHandler({ [weak self] (call, result) in
+            switch call.method {
+            case "startCamera":
+                self?.mView.startCamera()
+                result(nil)
+            case "stopCamera":
+                self?.mView.stopCamera()
+                result(nil)
+            case "setFlash":
+                self?.mView.setFlash(flash: call.arguments as! Bool)
+                result(nil)
+            case "getFlash":
+                result(self?.mView.getFlash())
+            case "toggleFlash":
+                self?.mView.toggleFlash()
+                result(nil)
+            default:
+                result(nil)
+            }
+        })
+        scanStreamHandler = ScanStreamHandler()
+        eventChannel.setStreamHandler(scanStreamHandler)
+    }
+    
+    deinit {
+        print("QrScanView deinit")
+        mView.stopCamera()
+        eventChannel.setStreamHandler(nil)
+        methodChannel.setMethodCallHandler(nil)
+    }
+    
     func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
         if let metadataObject = metadataObjects.first {
             guard let readableObject = metadataObject as? AVMetadataMachineReadableCodeObject else { return }
@@ -68,7 +71,7 @@ class QrScanView: NSObject, FlutterPlatformView,FlutterStreamHandler,AVCaptureMe
             AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
             print("扫码：",stringValue)
             mView.stopCamera()
-            eventSink?(["code":1,"text":stringValue])
+            scanStreamHandler.eventSink?(["code":1,"text":stringValue])
         }
     }
     
@@ -81,7 +84,7 @@ class ScanInnerView: UIView {
     var session:AVCaptureSession!
     var previewLayer:AVCaptureVideoPreviewLayer!
     var overlay:QrScanOverlay!
-    var outputDelegate:AVCaptureMetadataOutputObjectsDelegate!
+    weak var outputDelegate:AVCaptureMetadataOutputObjectsDelegate?
     
     init(frame: CGRect,outputDelegate:AVCaptureMetadataOutputObjectsDelegate) {
         self.outputDelegate = outputDelegate
