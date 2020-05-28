@@ -14,9 +14,6 @@ class QrCodeMethodHandler : MethodChannel.MethodCallHandler {
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
-            "getPlatformVersion" -> {
-                result.success("Android ${android.os.Build.VERSION.RELEASE}")
-            }
             "readQr" -> {
                 try {
                     var text = decodeQrCode(call.arguments as String)

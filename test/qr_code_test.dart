@@ -1,6 +1,5 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:qr_code/qr_code_plugin.dart';
 
 void main() {
   const MethodChannel channel = MethodChannel('qr_code');
@@ -15,9 +14,5 @@ void main() {
 
   tearDown(() {
     channel.setMockMethodCallHandler(null);
-  });
-
-  test('getPlatformVersion', () async {
-    expect(await QrCodePlugin.platformVersion, '42');
   });
 }
