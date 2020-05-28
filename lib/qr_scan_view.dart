@@ -32,6 +32,12 @@ class _QrScanViewState extends State<QrScanView> with WidgetsBindingObserver {
         onPlatformViewCreated: _onPlatformViewCreated,
         creationParamsCodec: const StandardMessageCodec(),
       );
+    } else if (Platform.isIOS) {
+      return UiKitView(
+        viewType: 'plugin.waibibabo.com/qr_scan_view',
+        onPlatformViewCreated: _onPlatformViewCreated,
+        creationParamsCodec: const StandardMessageCodec(),
+      );
     }
     return Text('不支持的平台');
   }
